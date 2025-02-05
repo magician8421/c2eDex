@@ -91,7 +91,7 @@ function Swap(props) {
     return res.data;
   }
   async function fetchDexSwap() {
-    const response = await checkAllowance(tokenOne.address, address);
+    let response = await checkAllowance(tokenOne.address, address);
     if (response.data.allowance === "0") {
       const response = await tokenApprove(tokenOne.address, tokenOneAmount);
       setTxDetails(response.data);
@@ -99,6 +99,16 @@ function Swap(props) {
       return;
     }
     console.log("make swap");
+    response = await axios.get("http://localhost:3001/swap", {
+      params: {
+        tokenSrc: tokenOne.address,
+        tokenTarget: tokenTwo.address,
+        amount: BigInt(tokenOneAmount * 10 ** tokenOne.decimals).toString(),
+        from: address,
+        slippage: slippage,
+      },
+    });
+    setTxDetails(response.data.tx);
   }
 
   async function checkAllowance(_tokenAddress, _walletAddress) {

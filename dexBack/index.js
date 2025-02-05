@@ -84,7 +84,6 @@ app.get("/swap", async (req, res) => {
       query.from,
       query.slippage
     );
-    console.log(response);
     if (response.data) {
       return res.status(200).json(response.data);
     } else {
@@ -142,18 +141,27 @@ async function tokenApprove(_tokenAddress, _amount) {
 
 async function tokenSwap(_tokenSrc, _tokenTarget, _amount, _from, _slippage) {
   const url = "https://api.1inch.dev/swap/v6.0/1/swap";
+  console.log(
+    "start swap,src=%s,target=%s,amount=%s,from=%s,slippage=%s",
+    _tokenSrc,
+    _tokenTarget,
+    _amount,
+    _from,
+    _slippage
+  );
 
   const config = {
     headers: {
       Authorization: "Bearer Ql5JDo6w9KsrYiN9y8JbH2im9DZehsIA",
     },
     params: {
-      src: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-      dst: "0x514910771af9ca656af840dff83e8264ecf986ca",
-      amount: "10000000000000000",
-      from: "0x9d2a28B4B23BBF47B6a6aD575bD9e83385453a35",
-      origin: "0x9d2a28B4B23BBF47B6a6aD575bD9e83385453a35",
-      slippage: "1",
+      src: _tokenSrc,
+      dst: _tokenTarget,
+      amount: _amount,
+      from: _from,
+      origin: _from,
+      slippage: _slippage,
+      disableEstimate: "true",
     },
     paramsSerializer: {
       indexes: null,
@@ -162,7 +170,7 @@ async function tokenSwap(_tokenSrc, _tokenTarget, _amount, _from, _slippage) {
 
   try {
     const response = await axios.get(url, config);
-    console.log(response.data);
+    return response;
   } catch (error) {
     console.error(error);
   }
