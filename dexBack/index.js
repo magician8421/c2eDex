@@ -49,6 +49,22 @@ app.get("/allowance", async (req, res) => {
   }
 });
 
+app.get("/approve", async (req, res) => {
+  const { query } = req;
+  try {
+    const response = await tokenApprove(query.tokenAddress, query.amount);
+    console.log(response);
+    if (response.data) {
+      return res.status(200).json(response.data);
+    } else {
+      return res.status(200).json({});
+    }
+  } catch (e) {
+    console.error(e);
+    return res.status(200).json({});
+  }
+});
+
 async function checkAllowance(_tokenAddress, _walletAddress) {
   const url = "https://api.1inch.dev/swap/v6.0/1/approve/allowance";
 
@@ -67,6 +83,29 @@ async function checkAllowance(_tokenAddress, _walletAddress) {
   } catch (error) {
     console.error(error);
     return error;
+  }
+}
+async function tokenApprove(_tokenAddress, _amount) {
+  const url = "https://api.1inch.dev/swap/v6.0/1/approve/transaction";
+
+  const config = {
+    headers: {
+      Authorization: "Bearer Ql5JDo6w9KsrYiN9y8JbH2im9DZehsIA",
+    },
+    params: {
+      tokenAddress: _tokenAddress,
+      amount: _amount,
+    },
+    paramsSerializer: {
+      indexes: null,
+    },
+  };
+
+  try {
+    const response = await axios.get(url, config);
+    return response;
+  } catch (error) {
+    console.error(error);
   }
 }
 

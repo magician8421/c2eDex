@@ -93,8 +93,8 @@ function Swap(props) {
   async function fetchDexSwap() {
     const response = await checkAllowance(tokenOne.address, address);
     if (response.data.allowance === "0") {
-      const approve = await approve(tokenOne.address, tokenOneAmount);
-      setTxDetails(approve.data);
+      const response = await tokenApprove(tokenOne.address, tokenOneAmount);
+      setTxDetails(response.data);
       console.log("not approved");
       return;
     }
@@ -112,26 +112,11 @@ function Swap(props) {
     }
   }
 
-  async function approve(_tokenAddress, _approveAmount) {
-    const url = "https://api.1inch.dev/swap/v6.0/1/approve/transaction";
-
-    const config = {
-      headers: {
-        Authorization: "Bearer Ql5JDo6w9KsrYiN9y8JbH2im9DZehsIA",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS",
-      },
-      params: {
-        tokenAddress: _tokenAddress,
-        amount: _approveAmount,
-      },
-      paramsSerializer: {
-        indexes: null,
-      },
-    };
-
+  async function tokenApprove(_tokenAddress, _approveAmount) {
     try {
-      return await axios.get(url, config);
+      return await axios.get("http://localhost:3001/approve", {
+        params: { tokenAddress: _tokenAddress, amount: _approveAmount },
+      });
     } catch (error) {
       console.error(error);
       return error;
@@ -144,6 +129,7 @@ function Swap(props) {
   }, []);
 
   useEffect(() => {
+    console.log(txDetails);
     if (txDetails.to && isConnected) {
       sendTransaction();
     }
