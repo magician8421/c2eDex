@@ -7,7 +7,9 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
-function Swap() {
+import { useSendTransaction, useWaitForTransaction } from "wagmi";
+function Swap(props) {
+  const { address, isConnected } = props;
   const [slippage, setSlippage] = useState(2.5);
   const [tokenOneAmount, setTokenOneAmount] = useState(null);
   const [tokenTwoAmount, setTokenTwoAmount] = useState(null);
@@ -16,6 +18,20 @@ function Swap() {
   const [isOpen, setIsOpen] = useState(false);
   const [changeToken, setChangeToken] = useState(1);
   const [prices, setPrices] = useState(null);
+  const [txDetails, setTxDetails] = useState({
+    to: null,
+    data: null,
+    value: null,
+  });
+
+  const { data, sendTransaction } = useSendTransaction({
+    request: {
+      from: address,
+      to: String(txDetails.to),
+      data: String(txDetails.data),
+      value: String(txDetails.value),
+    },
+  });
   function changeAmount(e) {
     setTokenOneAmount(e.target.value);
     if (e.target.value && prices) {
@@ -74,9 +90,65 @@ function Swap() {
     setPrices(res.data);
     return res.data;
   }
+  async function fetchDexSwap() {
+    const response = await checkAllowance(tokenOne.address, address);
+    if (response.data.allowance === "0") {
+      const approve = await approve(tokenOne.address, tokenOneAmount);
+      setTxDetails(approve.data);
+      console.log("not approved");
+      return;
+    }
+    console.log("make swap");
+  }
+
+  async function checkAllowance(_tokenAddress, _walletAddress) {
+    try {
+      return await axios.get("http://localhost:3001/allowance", {
+        params: { tokenAddress: _tokenAddress, walletAddress: _walletAddress },
+      });
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  }
+
+  async function approve(_tokenAddress, _approveAmount) {
+    const url = "https://api.1inch.dev/swap/v6.0/1/approve/transaction";
+
+    const config = {
+      headers: {
+        Authorization: "Bearer Ql5JDo6w9KsrYiN9y8JbH2im9DZehsIA",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS",
+      },
+      params: {
+        tokenAddress: _tokenAddress,
+        amount: _approveAmount,
+      },
+      paramsSerializer: {
+        indexes: null,
+      },
+    };
+
+    try {
+      return await axios.get(url, config);
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
+  }
+  //use effect
+
   useEffect(() => {
     fetchPrices(tokenLists[0].address, tokenLists[1].address);
   }, []);
+
+  useEffect(() => {
+    if (txDetails.to && isConnected) {
+      sendTransaction();
+    }
+  }, [txDetails]);
+
   const settings = (
     <>
       <div>Slippage Tolerance</div>
@@ -149,7 +221,11 @@ function Swap() {
             <DownOutlined />
           </div>
         </div>
-        <div className="swapButton" disabled={!tokenOneAmount}>
+        <div
+          className="swapButton"
+          disabled={!tokenOneAmount || !isConnected}
+          onClick={fetchDexSwap}
+        >
           Swap
         </div>
       </div>
