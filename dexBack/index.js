@@ -34,11 +34,11 @@ app.get("/tokenPrice", async (req, res) => {
 });
 
 app.get("/allowance", async (req, res) => {
-  if (process.env.ENV == "dev") {
-    return res
-      .status(200)
-      .json({ allowance: DEV_MOCK_TOKEN_APPROVE.toString() });
-  }
+  // if (process.env.ENV == "dev") {
+  //   return res
+  //     .status(200)
+  //     .json({ allowance: DEV_MOCK_TOKEN_APPROVE.toString() });
+  // }
 
   const { query } = req;
   try {

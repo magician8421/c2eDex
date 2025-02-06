@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Input, Popover, Radio, Modal, message } from "antd";
 import tokenLists from "../tokenList.json";
+
 import {
   ArrowDownOutlined,
   DownOutlined,
@@ -23,6 +24,7 @@ function Swap(props) {
     data: null,
     value: null,
   });
+  const [devApproved, setDevApproved] = useState(false);
 
   const { data, sendTransaction } = useSendTransaction({
     request: {
@@ -93,12 +95,20 @@ function Swap(props) {
   async function fetchDexSwap() {
     let response = await checkAllowance(tokenOne.address, address);
     if (response.data.allowance === "0") {
-      const response = await tokenApprove(tokenOne.address, tokenOneAmount);
+      //因为1inch免费版只有1tps的速率，所以这里sleep下，做演示
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const response = await tokenApprove(
+        tokenOne.address,
+        BigInt(tokenOneAmount * 10 ** tokenOne.decimals).toString()
+      );
       setTxDetails(response.data);
       console.log("not approved");
+      setDevApproved(true);
       return;
     }
     console.log("make swap");
+    //因为1inch免费版只有1tps的速率，所以这里sleep下，做演示
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     response = await axios.get("http://localhost:3001/swap", {
       params: {
         tokenSrc: tokenOne.address,
@@ -108,6 +118,7 @@ function Swap(props) {
         slippage: slippage,
       },
     });
+
     setTxDetails(response.data.tx);
   }
 
