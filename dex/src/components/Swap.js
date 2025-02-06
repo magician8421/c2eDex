@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Input, Popover, Radio, Modal, message } from "antd";
 import tokenLists from "../tokenList.json";
-
 import {
   ArrowDownOutlined,
   DownOutlined,
@@ -11,6 +10,7 @@ import axios from "axios";
 import { useSendTransaction, useWaitForTransaction } from "wagmi";
 function Swap(props) {
   const { address, isConnected } = props;
+  const [messageApi, contextHolder] = message.useMessage();
   const [slippage, setSlippage] = useState(2.5);
   const [tokenOneAmount, setTokenOneAmount] = useState(null);
   const [tokenTwoAmount, setTokenTwoAmount] = useState(null);
@@ -24,7 +24,6 @@ function Swap(props) {
     data: null,
     value: null,
   });
-  const [devApproved, setDevApproved] = useState(false);
 
   const { data, sendTransaction } = useSendTransaction({
     request: {
@@ -33,6 +32,10 @@ function Swap(props) {
       data: String(txDetails.data),
       value: String(txDetails.value),
     },
+  });
+
+  const { isLoading, isSuccess } = useWaitForTransaction({
+    hash: data?.hash,
   });
   function changeAmount(e) {
     setTokenOneAmount(e.target.value);
@@ -103,7 +106,6 @@ function Swap(props) {
       );
       setTxDetails(response.data);
       console.log("not approved");
-      setDevApproved(true);
       return;
     }
     console.log("make swap");
@@ -156,6 +158,33 @@ function Swap(props) {
     }
   }, [txDetails]);
 
+  useEffect(() => {
+    if (isLoading) {
+      messageApi.open({
+        type: "loading",
+        content: "Transaction is Pending...",
+        duration: 0,
+      });
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
+    messageApi.destroy();
+    if (isSuccess) {
+      messageApi.open({
+        type: "success",
+        content: "Transaction Successful",
+        duration: 1.5,
+      });
+    } else if (txDetails.to) {
+      messageApi.open({
+        type: "error",
+        content: "Transaction Failed",
+        duration: 1.5,
+      });
+    }
+  }, [isSuccess]);
+
   const settings = (
     <>
       <div>Slippage Tolerance</div>
@@ -170,6 +199,7 @@ function Swap(props) {
   );
   return (
     <>
+      {contextHolder}
       <Modal
         open={isOpen}
         footer={null}
