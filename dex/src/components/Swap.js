@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Input, Popover, Radio, Modal, message } from "antd";
+import { BigNumber, utils } from "ethers";
 import tokenLists from "../tokenList.json";
 import {
   ArrowDownOutlined,
@@ -102,9 +103,10 @@ function Swap(props) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       const response = await tokenApprove(
         tokenOne.address,
-        BigInt(tokenOneAmount * 10 ** tokenOne.decimals).toString()
+        utils.parseUnits(tokenOneAmount, tokenOne.decimals).toString()
       );
       setTxDetails(response.data);
+
       console.log("not approved");
       return;
     }
@@ -115,7 +117,7 @@ function Swap(props) {
       params: {
         tokenSrc: tokenOne.address,
         tokenTarget: tokenTwo.address,
-        amount: BigInt(tokenOneAmount * 10 ** tokenOne.decimals).toString(),
+        amount: utils.parseUnits(tokenOneAmount, tokenOne.decimals).toString(),
         from: address,
         slippage: slippage,
       },
