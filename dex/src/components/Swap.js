@@ -171,6 +171,7 @@ function Swap(props) {
   }, [isLoading]);
 
   useEffect(() => {
+    console.log("successChange");
     messageApi.destroy();
     if (isSuccess) {
       messageApi.open({
